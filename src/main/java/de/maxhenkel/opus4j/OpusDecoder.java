@@ -79,6 +79,12 @@ public class OpusDecoder implements AutoCloseable {
     }
 
     @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        close();
+    }
+
+    @Override
     public String toString() {
         synchronized (this) {
             return String.format("OpusDecoder[%d]", decoder);

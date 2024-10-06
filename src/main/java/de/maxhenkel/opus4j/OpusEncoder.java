@@ -38,6 +38,22 @@ public class OpusEncoder implements AutoCloseable {
         }
     }
 
+    private native void setBitrate0(int bitrate);
+
+    public void setBitrate(int bitrate) {
+        synchronized (this) {
+            setBitrate0(bitrate);
+        }
+    }
+
+    private native int getBitrate0();
+
+    public int getBitrate() {
+        synchronized (this) {
+            return getBitrate0();
+        }
+    }
+
     private native byte[] encode0(short[] input);
 
     public byte[] encode(short[] input) {
@@ -75,6 +91,12 @@ public class OpusEncoder implements AutoCloseable {
         synchronized (this) {
             return String.format("OpusEncoder[%d]", encoder);
         }
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        close();
     }
 
     public static enum Application {

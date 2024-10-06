@@ -1,7 +1,7 @@
 use jni::{JNIEnv};
 use jni::objects::{JByteArray, JClass, JObject, JShortArray, JValue};
 use jni::sys::{jbyte, jint, jlong, jshort};
-use opus::{Application, Channels, Encoder};
+use opus::{Application, Bitrate, Channels, Encoder};
 use crate::opus::exceptions::{throw_illegal_argument_exception, throw_illegal_state_exception, throw_io_exception, throw_runtime_exception};
 
 const DEFAULT_PAYLOAD_SIZE: u32 = 1024;
@@ -85,6 +85,50 @@ pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_getMaxPayloadSize0(mut en
     };
 
     return encoder.max_payload_size as jint;
+}
+
+#[no_mangle]
+pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_setBitrate0(mut env: JNIEnv, obj: JObject, bitrate: jint) {
+    if bitrate <= -2 {
+        throw_illegal_argument_exception(&mut env, format!("Invalid maximum payload size: {}", bitrate));
+        return;
+    }
+
+    let mut encoder = match get_encoder(&mut env, &obj) {
+        Some(encoder) => encoder,
+        None => {
+            return;
+        }
+    };
+    
+    if let Err(e) = encoder.encoder.set_bitrate(match bitrate {
+           -1 => Bitrate::Max,
+           0 => Bitrate::Auto,
+           x => Bitrate::Bits(x) 
+        }) {
+        throw_runtime_exception(&mut env, format!("Failed to set bitrate: {}", e));
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn Java_de_maxhenkel_opus4j_OpusEncoder_getBitrate0(mut env: JNIEnv, obj: JObject) -> jint {
+    let encoder = match get_encoder(&mut env, &obj) {
+        Some(encoder) => encoder,
+        None => {
+            throw_runtime_exception(&mut env, "Failed to get bitrate".to_owned());
+            return 0;
+        }
+    };
+
+    (match encoder.encoder.get_bitrate() {
+        Ok(Bitrate::Bits(bitrate)) => bitrate,
+        Ok(Bitrate::Auto) => 0,
+        Ok(Bitrate::Max) => -1,
+        Err(e) => {
+            throw_runtime_exception(&mut env, format!("Failed to get bitrate: {}", e));
+            -1
+        }
+    }) as jint
 }
 
 #[no_mangle]
