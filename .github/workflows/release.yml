@@ -164,9 +164,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '8'
-          server-id: henkelmax.public
-          server-username: MAVEN_USERNAME
-          server-password: MAVEN_PASSWORD
       - name: Download linux-x86-64
         uses: actions/download-artifact@v3
         with:
@@ -207,10 +204,6 @@ jobs:
           mvn -B install
           mkdir -p release
           cp $(find ./target -maxdepth 1 -type f -name "*.jar") ./release/
-          mvn -B deploy
-        env:
-           MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
       - uses: actions/upload-artifact@v3
         with:
           name: opus4j-java
